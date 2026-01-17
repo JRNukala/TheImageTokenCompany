@@ -12,21 +12,20 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Lazy-loaded clients
-_gemini_model = None
+_gemini_client = None
 _openai_client = None
 
 
-def _get_gemini_model():
-    """Lazy load Gemini model."""
-    global _gemini_model
-    if _gemini_model is None:
-        import google.generativeai as genai
+def _get_gemini_client():
+    """Lazy load Gemini client."""
+    global _gemini_client
+    if _gemini_client is None:
+        from google import genai
         api_key = os.getenv("GEMINI_API_KEY")
         if not api_key:
             raise ValueError("GEMINI_API_KEY environment variable not set")
-        genai.configure(api_key=api_key)
-        _gemini_model = genai.GenerativeModel("gemini-1.5-flash")
-    return _gemini_model
+        _gemini_client = genai.Client(api_key=api_key)
+    return _gemini_client
 
 
 def _get_openai_client():
@@ -56,14 +55,11 @@ def get_answer_gemini(compressed_img_descr: str, compressed_txt: str) -> str:
     )
 
     try:
-        model = _get_gemini_model()
+        client = _get_gemini_client()
         full_prompt = f"{SYSTEM_INSTRUCTION}\n\n{prompt}"
-        response = model.generate_content(
-            full_prompt,
-            generation_config={
-                "temperature": 0,
-                "max_output_tokens": 150
-            }
+        response = client.models.generate_content(
+            model="gemini-2.0-flash-lite",
+            contents=full_prompt
         )
         return response.text.strip()
 

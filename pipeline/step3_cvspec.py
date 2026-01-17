@@ -22,12 +22,11 @@ def _get_gemini_model():
     """Lazy load Gemini model."""
     global _gemini_model
     if _gemini_model is None:
-        import google.generativeai as genai
+        from google import genai
         api_key = os.getenv("GEMINI_API_KEY")
         if not api_key:
             raise ValueError("GEMINI_API_KEY environment variable not set")
-        genai.configure(api_key=api_key)
-        _gemini_model = genai.GenerativeModel("gemini-1.5-flash")
+        _gemini_model = genai.Client(api_key=api_key)
     return _gemini_model
 
 
@@ -181,15 +180,12 @@ def _parse_json_response(content: str) -> dict:
 def generate_cvspec_gemini(prompt: str) -> CVSpec:
     """Generate CVSpec using Gemini."""
     try:
-        model = _get_gemini_model()
+        client = _get_gemini_model()
 
         full_prompt = f"{SYSTEM_PROMPT}\n\nUser: \"{prompt}\""
-        response = model.generate_content(
-            full_prompt,
-            generation_config={
-                "temperature": 0,
-                "max_output_tokens": 300
-            }
+        response = client.models.generate_content(
+            model="gemini-2.0-flash-lite",
+            contents=full_prompt
         )
 
         content = response.text.strip()
