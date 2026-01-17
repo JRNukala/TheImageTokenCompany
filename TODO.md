@@ -1,0 +1,67 @@
+# TODO.md — Multimodal Semantic Compression Pipeline
+
+## 🔥 Current Tasks
+
+* [ ] Create .env file with actual API keys
+* [ ] Install dependencies: `pip install -r requirements.txt`
+* [ ] Download test images for demo
+* [ ] Test end-to-end with: `python main.py analyze -i test.jpg -p "What color is his shirt?" -v`
+
+## ✅ Completed
+
+* [x] Create CLAUDE.md (hackathon execution rules)
+* [x] Create TODO.md (task tracking)
+* [x] Create project structure (pipeline/, vision_modules/, utils/)
+* [x] Create requirements.txt
+* [x] Create .env.example
+* [x] Implement utils/bear1.py - bear-1 API wrapper
+* [x] Implement utils/tokens.py - tiktoken counter
+* [x] Implement pipeline/step3_cvspec.py - CVspec generation (core innovation)
+* [x] Implement vision_modules/ocr.py - EasyOCR wrapper
+* [x] Implement vision_modules/objects.py - YOLOv8 object detection
+* [x] Implement vision_modules/scene.py - Scene classification
+* [x] Implement vision_modules/colors.py - Dominant color extraction
+* [x] Implement vision_modules/person.py - Person detection + attributes
+* [x] Implement vision_modules/layout.py - Document layout analysis
+* [x] Implement pipeline/step4_vision.py - Vision dispatcher
+* [x] Implement pipeline/step5_compress.py - Final compression
+* [x] Implement pipeline/step6_llm.py - Final LLM call
+* [x] Implement pipeline/step1_input.py - Input validation
+* [x] Implement pipeline/step2_compress_prompt.py - Prompt compression
+* [x] Implement main.py CLI with typer/rich
+
+## 🧠 Notes / Decisions
+
+* **Tech Stack**: Python + OpenCV + YOLOv8 + EasyOCR + MediaPipe + bear-1 + OpenAI
+* **LLM Provider**: OpenAI (GPT-3.5-turbo for CVspec, GPT-4o-mini for final)
+* **Core Innovation**: CVspec - using cheap LLM to route expensive vision operations
+* **Target**: 85-95% token reduction vs verbose captions
+* **Demo Strategy**: Side-by-side comparison showing token savings
+
+## 📁 Project Structure
+
+```
+The Token Company Project/
+├── main.py                      # CLI entry point
+├── requirements.txt             # Dependencies
+├── .env.example                 # API key template
+├── CLAUDE.md                    # Hackathon rules
+├── TODO.md                      # This file
+├── pipeline/
+│   ├── step1_input.py           # Input handling
+│   ├── step2_compress_prompt.py # Optional prompt compression
+│   ├── step3_cvspec.py          # CVspec generation (core!)
+│   ├── step4_vision.py          # Vision dispatcher
+│   ├── step5_compress.py        # Final compression
+│   └── step6_llm.py             # Final LLM call
+├── vision_modules/
+│   ├── ocr.py                   # EasyOCR
+│   ├── objects.py               # YOLOv8
+│   ├── scene.py                 # Scene classification
+│   ├── person.py                # Person detection
+│   ├── colors.py                # Color extraction
+│   └── layout.py                # Document layout
+└── utils/
+    ├── bear1.py                 # bear-1 wrapper
+    └── tokens.py                # Token counting
+```
