@@ -41,13 +41,14 @@ def _get_client():
     return _client
 
 
-def compress(text: str, aggressiveness: float = 0.7) -> CompressionResult:
+def compress(text: str, aggressiveness: float = 0.7, provider: str = "gemini") -> CompressionResult:
     """
     Compress text using bear-1.
 
     Args:
         text: Text to compress
         aggressiveness: 0.0 (minimal) to 1.0 (maximum compression)
+        provider: LLM provider for accurate token counting ("gemini" or "openai")
 
     Returns:
         CompressionResult with original and compressed text
@@ -62,7 +63,7 @@ def compress(text: str, aggressiveness: float = 0.7) -> CompressionResult:
             compressed_tokens=0
         )
 
-    original_tokens = count_tokens(text)
+    original_tokens = count_tokens(text, provider)
 
     # Skip compression for very short text
     if original_tokens <= 3:
@@ -80,7 +81,7 @@ def compress(text: str, aggressiveness: float = 0.7) -> CompressionResult:
             aggressiveness=aggressiveness
         )
         compressed = result.output
-        compressed_tokens = count_tokens(compressed)
+        compressed_tokens = count_tokens(compressed, provider)
 
         return CompressionResult(
             original=text,

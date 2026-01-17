@@ -13,21 +13,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Lazy-loaded clients
-_gemini_model = None
+# OpenAI client (lazy-loaded)
 _openai_client = None
-
-
-def _get_gemini_model():
-    """Lazy load Gemini model."""
-    global _gemini_model
-    if _gemini_model is None:
-        from google import genai
-        api_key = os.getenv("GEMINI_API_KEY")
-        if not api_key:
-            raise ValueError("GEMINI_API_KEY environment variable not set")
-        _gemini_model = genai.Client(api_key=api_key)
-    return _gemini_model
 
 
 def _get_openai_client():
@@ -61,6 +48,7 @@ class CVSpec:
     person: PersonSpec = field(default_factory=PersonSpec)
     colors: bool = False
     layout: bool = False
+    understanding: bool = False  # Semantic scene understanding (actions, emotions, context)
 
     def to_dict(self) -> dict:
         return {
@@ -75,7 +63,8 @@ class CVSpec:
                 "count": self.person.count
             },
             "colors": self.colors,
-            "layout": self.layout
+            "layout": self.layout,
+            "understanding": self.understanding
         }
 
     @classmethod
@@ -94,7 +83,8 @@ class CVSpec:
             scene=data.get("scene", False),
             person=person_spec,
             colors=data.get("colors", False),
-            layout=data.get("layout", False)
+            layout=data.get("layout", False),
+            understanding=data.get("understanding", False)
         )
 
     @classmethod
@@ -112,7 +102,8 @@ class CVSpec:
                 count=True
             ),
             colors=True,
-            layout=True
+            layout=True,
+            understanding=True
         )
 
 
@@ -131,34 +122,47 @@ Output ONLY a JSON object with this schema (all values are booleans):
     "count": false        // Need to count people?
   },
   "colors": false,        // Need overall dominant colors of image?
-  "layout": false         // Need document layout analysis?
+  "layout": false,        // Need document layout analysis?
+  "understanding": false  // Need to understand actions/emotions/what's happening?
 }
 
 Examples:
 
 User: "What does the sign say?"
-{"ocr": true, "objects": false, "scene": false, "person": {"detect": false, "expression": false, "clothing_color": false, "clothing_type": false, "count": false}, "colors": false, "layout": false}
+{"ocr": true, "objects": false, "scene": false, "person": {"detect": false, "expression": false, "clothing_color": false, "clothing_type": false, "count": false}, "colors": false, "layout": false, "understanding": false}
 
 User: "How many people are there?"
-{"ocr": false, "objects": false, "scene": false, "person": {"detect": true, "expression": false, "clothing_color": false, "clothing_type": false, "count": true}, "colors": false, "layout": false}
+{"ocr": false, "objects": false, "scene": false, "person": {"detect": true, "expression": false, "clothing_color": false, "clothing_type": false, "count": true}, "colors": false, "layout": false, "understanding": false}
 
 User: "What color is her dress?"
-{"ocr": false, "objects": false, "scene": false, "person": {"detect": true, "expression": false, "clothing_color": true, "clothing_type": true, "count": false}, "colors": false, "layout": false}
+{"ocr": false, "objects": false, "scene": false, "person": {"detect": true, "expression": false, "clothing_color": true, "clothing_type": true, "count": false}, "colors": false, "layout": false, "understanding": false}
 
 User: "Is this indoors or outdoors?"
-{"ocr": false, "objects": false, "scene": true, "person": {"detect": false, "expression": false, "clothing_color": false, "clothing_type": false, "count": false}, "colors": false, "layout": false}
+{"ocr": false, "objects": false, "scene": true, "person": {"detect": false, "expression": false, "clothing_color": false, "clothing_type": false, "count": false}, "colors": false, "layout": false, "understanding": false}
 
 User: "What objects are on the table?"
-{"ocr": false, "objects": true, "scene": false, "person": {"detect": false, "expression": false, "clothing_color": false, "clothing_type": false, "count": false}, "colors": false, "layout": false}
+{"ocr": false, "objects": true, "scene": false, "person": {"detect": false, "expression": false, "clothing_color": false, "clothing_type": false, "count": false}, "colors": false, "layout": false, "understanding": false}
 
 User: "Is he happy or sad?"
-{"ocr": false, "objects": false, "scene": false, "person": {"detect": true, "expression": true, "clothing_color": false, "clothing_type": false, "count": false}, "colors": false, "layout": false}
+{"ocr": false, "objects": false, "scene": false, "person": {"detect": true, "expression": true, "clothing_color": false, "clothing_type": false, "count": false}, "colors": false, "layout": false, "understanding": false}
 
 User: "What's the main color of the room?"
-{"ocr": false, "objects": false, "scene": false, "person": {"detect": false, "expression": false, "clothing_color": false, "clothing_type": false, "count": false}, "colors": true, "layout": false}
+{"ocr": false, "objects": false, "scene": false, "person": {"detect": false, "expression": false, "clothing_color": false, "clothing_type": false, "count": false}, "colors": true, "layout": false, "understanding": false}
 
 User: "Read the document"
-{"ocr": true, "objects": false, "scene": false, "person": {"detect": false, "expression": false, "clothing_color": false, "clothing_type": false, "count": false}, "colors": false, "layout": true}
+{"ocr": true, "objects": false, "scene": false, "person": {"detect": false, "expression": false, "clothing_color": false, "clothing_type": false, "count": false}, "colors": false, "layout": true, "understanding": false}
+
+User: "What are they doing?"
+{"ocr": false, "objects": false, "scene": false, "person": {"detect": true, "expression": false, "clothing_color": false, "clothing_type": false, "count": false}, "colors": false, "layout": false, "understanding": true}
+
+User: "Are they fighting or hugging?"
+{"ocr": false, "objects": false, "scene": false, "person": {"detect": true, "expression": true, "clothing_color": false, "clothing_type": false, "count": false}, "colors": false, "layout": false, "understanding": true}
+
+User: "Describe what's happening in the scene"
+{"ocr": false, "objects": false, "scene": true, "person": {"detect": true, "expression": false, "clothing_color": false, "clothing_type": false, "count": false}, "colors": false, "layout": false, "understanding": true}
+
+User: "What is going on here?"
+{"ocr": false, "objects": true, "scene": true, "person": {"detect": true, "expression": false, "clothing_color": false, "clothing_type": false, "count": false}, "colors": false, "layout": false, "understanding": true}
 
 Output ONLY the JSON object, no explanation."""
 
@@ -178,17 +182,14 @@ def _parse_json_response(content: str) -> dict:
 
 
 def generate_cvspec_gemini(prompt: str) -> CVSpec:
-    """Generate CVSpec using Gemini."""
+    """Generate CVSpec using Gemini with shared client and retry logic."""
     try:
-        client = _get_gemini_model()
+        # Use shared client with retry logic
+        from utils.gemini_client import generate_with_retry, GEMINI_MODEL
 
         full_prompt = f"{SYSTEM_PROMPT}\n\nUser: \"{prompt}\""
-        response = client.models.generate_content(
-            model="gemini-2.0-flash-lite",
-            contents=full_prompt
-        )
+        content = generate_with_retry(full_prompt)
 
-        content = response.text.strip()
         data = _parse_json_response(content)
         return CVSpec.from_dict(data)
 

@@ -7,7 +7,7 @@ from utils.bear1 import compress, CompressionResult
 from utils.tokens import count_tokens
 
 
-def compress_prompt(prompt: str, aggressiveness: float = 0.7) -> tuple[str, bool, CompressionResult]:
+def compress_prompt(prompt: str, aggressiveness: float = 0.7, provider: str = "gemini") -> tuple[str, bool, CompressionResult]:
     """
     Optionally compress the user prompt.
 
@@ -16,11 +16,12 @@ def compress_prompt(prompt: str, aggressiveness: float = 0.7) -> tuple[str, bool
     Args:
         prompt: User's original prompt
         aggressiveness: bear-1 aggressiveness level
+        provider: LLM provider for accurate token counting ("gemini" or "openai")
 
     Returns:
         Tuple of (compressed_prompt, was_compressed, compression_result)
     """
-    token_count = count_tokens(prompt)
+    token_count = count_tokens(prompt, provider)
 
     # Skip compression for short prompts
     if token_count < 10:
@@ -33,7 +34,7 @@ def compress_prompt(prompt: str, aggressiveness: float = 0.7) -> tuple[str, bool
         return prompt, False, result
 
     # Compress with bear-1
-    result = compress(prompt, aggressiveness=aggressiveness)
+    result = compress(prompt, aggressiveness=aggressiveness, provider=provider)
 
     # Only use compressed version if it's actually shorter
     if result.compressed_tokens < result.original_tokens:

@@ -30,7 +30,8 @@ def compress_outputs(
     img_descr: str,
     txt: str,
     txt_already_compressed: bool = False,
-    aggressiveness: float = 0.7
+    aggressiveness: float = 0.7,
+    provider: str = "gemini"
 ) -> tuple[str, str, CompressionStats]:
     """
     Compress vision output and prompt using bear-1.
@@ -40,23 +41,24 @@ def compress_outputs(
         txt: User's prompt (may already be compressed)
         txt_already_compressed: Whether prompt was compressed in Step 2
         aggressiveness: bear-1 aggressiveness (0.0-1.0)
+        provider: LLM provider for accurate token counting ("gemini" or "openai")
 
     Returns:
         Tuple of (compressed_img_descr, compressed_txt, stats)
     """
     # Compress image description
-    img_result = compress(img_descr, aggressiveness=aggressiveness)
+    img_result = compress(img_descr, aggressiveness=aggressiveness, provider=provider)
 
     # Compress text only if not already compressed
     if txt_already_compressed:
         txt_result = CompressionResult(
             original=txt,
             compressed=txt,
-            original_tokens=count_tokens(txt),
-            compressed_tokens=count_tokens(txt)
+            original_tokens=count_tokens(txt, provider),
+            compressed_tokens=count_tokens(txt, provider)
         )
     else:
-        txt_result = compress(txt, aggressiveness=aggressiveness)
+        txt_result = compress(txt, aggressiveness=aggressiveness, provider=provider)
 
     stats = CompressionStats(
         original_img_tokens=img_result.original_tokens,

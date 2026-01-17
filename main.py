@@ -63,13 +63,13 @@ def run_pipeline(
         info = get_image_info(inputs.image)
         console.print(f"  Image: {inputs.image_path} ({info['size']})")
         console.print(f"  Prompt: \"{inputs.prompt}\"")
-        console.print(f"  Prompt tokens: {count_tokens(inputs.prompt)}")
+        console.print(f"  Prompt tokens: {count_tokens(inputs.prompt, provider)}")
 
     # STEP 2: Compress prompt (optional)
     if verbose:
         console.print("\n[bold blue]STEP 2:[/] Compressing prompt...")
 
-    compressed_prompt, was_compressed, prompt_result = compress_prompt(inputs.prompt)
+    compressed_prompt, was_compressed, prompt_result = compress_prompt(inputs.prompt, provider=provider)
 
     if verbose:
         if was_compressed:
@@ -79,15 +79,24 @@ def run_pipeline(
         else:
             console.print(f"  Skipped (prompt already short)")
 
-    # STEP 3: Generate CVspec
+    # STEP 3: Generate CVspec (use ORIGINAL prompt for better routing accuracy)
     if verbose:
         console.print(f"\n[bold blue]STEP 3:[/] Generating CVspec (using {provider})...")
 
-    cvspec = generate_cvspec(compressed_prompt, provider=provider)
+    cvspec = generate_cvspec(inputs.prompt, provider=provider)
+
+    # Fallback: If no modules selected, use understanding (SmolVLM) as default
+    modules = get_active_modules(cvspec)
+    if not modules:
+        cvspec.understanding = True
+        if verbose:
+            console.print(f"  [yellow]No modules selected, falling back to understanding (SmolVLM)[/]")
 
     if verbose:
         modules = get_active_modules(cvspec)
         console.print(f"  Active modules: {', '.join(modules) if modules else 'none'}")
+        # Debug: Show full CVSpec
+        console.print(f"  [dim]CVSpec: {cvspec.to_dict()}[/]")
 
     # STEP 4: Run vision pipeline
     if verbose:
@@ -97,14 +106,14 @@ def run_pipeline(
 
     if verbose:
         console.print(f"  Raw output: \"{img_descr}\"")
-        console.print(f"  Output tokens: {count_tokens(img_descr)}")
+        console.print(f"  Output tokens: {count_tokens(img_descr, provider)}")
 
     # STEP 5: Compress outputs
     if verbose:
         console.print("\n[bold blue]STEP 5:[/] Compressing with bear-1...")
 
     compressed_img, compressed_txt, stats = compress_outputs(
-        img_descr, compressed_prompt, txt_already_compressed=was_compressed
+        img_descr, compressed_prompt, txt_already_compressed=was_compressed, provider=provider
     )
 
     if verbose:
@@ -113,29 +122,47 @@ def run_pipeline(
         console.print(f"  Total tokens: {stats.total_compressed}")
         console.print(f"  Savings: {stats.savings_percent:.1f}%")
 
-    # STEP 6: Get final answer
+    # STEP 6: Get final answer (COMMENTED OUT FOR DEBUGGING)
     if verbose:
-        console.print(f"\n[bold blue]STEP 6:[/] Getting answer from LLM ({provider})...")
+        console.print(f"\n[bold blue]STEP 6:[/] [yellow]SKIPPED - Final LLM call disabled for debugging[/]")
         final_prompt = build_final_prompt(compressed_img, compressed_txt)
-        console.print(f"  Final prompt:\n    {final_prompt.replace(chr(10), chr(10) + '    ')}")
-        console.print(f"  Final prompt tokens: {count_tokens(final_prompt)}")
+        console.print(f"  Final prompt that WOULD be sent:\n    {final_prompt.replace(chr(10), chr(10) + '    ')}")
+        console.print(f"  Final prompt tokens: {count_tokens(final_prompt, provider)}")
 
-    answer = get_answer(compressed_img, compressed_txt, provider=provider, model=model)
+    # answer = get_answer(compressed_img, compressed_txt, provider=provider, model=model)
+    answer = "[SKIPPED - LLM call disabled for debugging]"
 
     if verbose:
-        console.print(f"\n[bold green]Answer:[/] {answer}")
+        console.print(f"\n[bold yellow]Debug Summary:[/]")
+        console.print(f"  Vision pipeline raw output: \"{img_descr}\"")
+        console.print(f"  Compressed image desc: \"{compressed_img}\"")
+        console.print(f"  Compressed question: \"{compressed_txt}\"")
 
-        # Show summary
-        baseline_tokens = 120  # Estimated verbose caption baseline
+        # Show summary comparing to direct Gemini image call
+        # Gemini charges ~258 tokens per image input (standard) or up to 560 tokens
+        # We use 258 as the baseline for standard image processing
+        gemini_image_tokens = 258
+        prompt_tokens = count_tokens(inputs.prompt, provider)
+        baseline_tokens = gemini_image_tokens + prompt_tokens  # Image + question sent to Gemini
+        our_tokens = stats.total_compressed
+
         console.print("\n")
-        table = Table(title="Token Comparison")
-        table.add_column("Approach", style="cyan")
-        table.add_column("Tokens", justify="right")
+        table = Table(title="Token Comparison vs Direct Gemini")
+        table.add_column("Approach", style="cyan", width=35)
+        table.add_column("Input Tokens", justify="right")
         table.add_column("Savings", justify="right")
-        table.add_row("Traditional (verbose caption)", str(baseline_tokens), "-")
-        table.add_row("Our approach", str(stats.total_compressed),
-                      f"{((baseline_tokens - stats.total_compressed) / baseline_tokens * 100):.0f}%")
+        table.add_row(
+            "Direct Gemini (image + question)",
+            f"{baseline_tokens} ({gemini_image_tokens} img + {prompt_tokens} txt)",
+            "-"
+        )
+        table.add_row(
+            "Our pipeline (text only)",
+            str(our_tokens),
+            f"[bold green]{((baseline_tokens - our_tokens) / baseline_tokens * 100):.0f}%[/]"
+        )
         console.print(table)
+        console.print(f"\n[dim]Note: Gemini charges ~258 tokens per image input[/]")
 
     return answer
 
