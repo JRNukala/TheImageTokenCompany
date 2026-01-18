@@ -2,10 +2,9 @@
 
 ## 🔥 Current Tasks
 
-* [ ] Create .env file with actual API keys
-* [ ] Install dependencies: `pip install -r requirements.txt`
-* [ ] Download test images for demo
-* [ ] Test end-to-end: `python main.py analyze -i test_images/testimage.png -p "What is the answer?" -v`
+* [ ] Install Flask: `pip install flask`
+* [ ] Test web interface: `python app.py`
+* [ ] Test CLI: `python main.py analyze -i person.jpg -p "What is this person feeling?" -v`
 
 ## ✅ Completed
 
@@ -34,6 +33,9 @@
 * [x] Added understanding_focus field to CVSpec for Gemini to guide SmolVLM
 * [x] Re-enabled final LLM call with fallback to original prompt if vision fails
 * [x] SmolVLM uses user prompt as focus hint when Gemini doesn't provide one
+* [x] Created web interface with Flask (app.py)
+* [x] Built frontend UI with image upload, prompt input, and results display
+* [x] Added visual token comparison and pipeline details viewer
 
 ## 🧠 Notes / Decisions
 
@@ -49,10 +51,16 @@
 ```
 The Token Company Project/
 ├── main.py                      # CLI entry point
+├── app.py                       # Web interface (Flask)
 ├── requirements.txt             # Dependencies
 ├── .env.example                 # API key template
 ├── CLAUDE.md                    # Hackathon rules
 ├── TODO.md                      # This file
+├── templates/
+│   └── index.html               # Web UI template
+├── static/
+│   ├── css/style.css            # Web UI styling
+│   └── js/app.js                # Web UI JavaScript
 ├── pipeline/
 │   ├── step1_input.py           # Input handling
 │   ├── step2_compress_prompt.py # Optional prompt compression

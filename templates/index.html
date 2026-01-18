@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Token Company - Multimodal Semantic Compression</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🖼️ The Image Token Company</h1>
+            <p class="subtitle">Multimodal Semantic Compression Pipeline</p>
+            <p class="description">Upload an image and ask a question. We'll compress the visual information and get you an answer using 85-95% fewer tokens!</p>
+        </header>
+
+        <div class="main-content">
+            <!-- Input Section -->
+            <div class="input-section">
+                <form id="analysisForm" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="imageInput">Upload Image</label>
+                        <div class="file-upload-wrapper">
+                            <input type="file" id="imageInput" name="image" accept="image/*" required>
+                            <div id="imagePreview" class="image-preview"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="promptInput">Your Question</label>
+                        <textarea id="promptInput" name="prompt" rows="3" placeholder="What is this person feeling?" required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="providerSelect">LLM Provider</label>
+                        <select id="providerSelect" name="provider">
+                            <option value="gemini" selected>Gemini (Default)</option>
+                            <option value="openai">OpenAI</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" id="submitBtn" class="btn-primary">
+                        <span class="btn-text">Analyze Image</span>
+                        <span class="loader" style="display: none;"></span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Results Section -->
+            <div id="resultsSection" class="results-section" style="display: none;">
+                <h2>Results</h2>
+
+                <!-- Final Answer (Most Important) -->
+                <div class="result-card highlight">
+                    <h3>✨ Final Answer</h3>
+                    <div id="finalAnswer" class="answer-text"></div>
+                </div>
+
+                <!-- Token Savings Comparison -->
+                <div class="result-card">
+                    <h3>📊 Token Savings</h3>
+                    <div class="comparison-grid">
+                        <div class="comparison-item">
+                            <div class="label">Direct Gemini (baseline)</div>
+                            <div class="value" id="baselineTokens">-</div>
+                        </div>
+                        <div class="comparison-item">
+                            <div class="label">Our Pipeline</div>
+                            <div class="value" id="ourTokens">-</div>
+                        </div>
+                        <div class="comparison-item savings">
+                            <div class="label">Token Savings</div>
+                            <div class="value" id="savingsPercent">-</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pipeline Details (Collapsible) -->
+                <details class="result-card details-card">
+                    <summary>🔍 View Pipeline Details</summary>
+
+                    <div class="pipeline-step">
+                        <h4>Step 2: Prompt Compression</h4>
+                        <div class="step-content">
+                            <p><strong>Original:</strong> <span id="step2Original"></span></p>
+                            <p><strong>Compressed:</strong> <span id="step2Compressed"></span></p>
+                            <p><strong>Tokens:</strong> <span id="step2Tokens"></span></p>
+                        </div>
+                    </div>
+
+                    <div class="pipeline-step">
+                        <h4>Step 3: CVspec (Vision Routing)</h4>
+                        <div class="step-content">
+                            <p><strong>Active Modules:</strong> <span id="step3Modules"></span></p>
+                            <details>
+                                <summary>View full CVspec</summary>
+                                <pre id="step3Cvspec"></pre>
+                            </details>
+                        </div>
+                    </div>
+
+                    <div class="pipeline-step">
+                        <h4>Step 4: Vision Pipeline</h4>
+                        <div class="step-content">
+                            <p><strong>Raw Output:</strong> <span id="step4Output"></span></p>
+                            <p><strong>Tokens:</strong> <span id="step4Tokens"></span></p>
+                        </div>
+                    </div>
+
+                    <div class="pipeline-step">
+                        <h4>Step 5: bear-1 Compression</h4>
+                        <div class="step-content">
+                            <p><strong>Compressed Image Desc:</strong> <span id="step5ImageDesc"></span></p>
+                            <p><strong>Compressed Question:</strong> <span id="step5Question"></span></p>
+                            <p><strong>Total Tokens:</strong> <span id="step5Tokens"></span></p>
+                        </div>
+                    </div>
+
+                    <div class="pipeline-step">
+                        <h4>Step 6: Final LLM Prompt</h4>
+                        <div class="step-content">
+                            <pre id="step6Prompt"></pre>
+                            <p><strong>Tokens:</strong> <span id="step6Tokens"></span></p>
+                        </div>
+                    </div>
+                </details>
+
+                <!-- Error Display -->
+                <div id="errorSection" class="error-card" style="display: none;">
+                    <h3>❌ Error</h3>
+                    <p id="errorMessage"></p>
+                    <details>
+                        <summary>View error details</summary>
+                        <pre id="errorTrace"></pre>
+                    </details>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
