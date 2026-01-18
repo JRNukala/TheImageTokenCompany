@@ -5,7 +5,7 @@
 * [ ] Create .env file with actual API keys
 * [ ] Install dependencies: `pip install -r requirements.txt`
 * [ ] Download test images for demo
-* [ ] Test end-to-end with: `python main.py analyze -i test.jpg -p "What color is his shirt?" -v`
+* [ ] Test end-to-end: `python main.py analyze -i test_images/testimage.png -p "What is the answer?" -v`
 
 ## ✅ Completed
 
@@ -29,12 +29,18 @@
 * [x] Implement pipeline/step1_input.py - Input validation
 * [x] Implement pipeline/step2_compress_prompt.py - Prompt compression
 * [x] Implement main.py CLI with typer/rich
+* [x] Enhanced SmolVLM scene understanding with more expressive descriptions (30-40 words vs 15)
+* [x] Set CVspec routing to use Gemini (most reliable for structured JSON output)
+* [x] Added understanding_focus field to CVSpec for Gemini to guide SmolVLM
+* [x] Re-enabled final LLM call with fallback to original prompt if vision fails
+* [x] SmolVLM uses user prompt as focus hint when Gemini doesn't provide one
 
 ## 🧠 Notes / Decisions
 
-* **Tech Stack**: Python + OpenCV + YOLOv8 + EasyOCR + MediaPipe + bear-1 + OpenAI
-* **LLM Provider**: OpenAI (GPT-3.5-turbo for CVspec, GPT-4o-mini for final)
-* **Core Innovation**: CVspec - using cheap LLM to route expensive vision operations
+* **Tech Stack**: Python + OpenCV + YOLOv8 + EasyOCR + MediaPipe + bear-1 + OpenAI + SmolVLM
+* **LLM Provider**: Gemini for CVspec routing, OpenAI for final answer
+* **Core Innovation**: CVspec - using cheap LLM (Gemini Flash) to route expensive vision operations
+* **SmolVLM Integration**: Used for scene understanding module (local, 100% offline)
 * **Target**: 85-95% token reduction vs verbose captions
 * **Demo Strategy**: Side-by-side comparison showing token savings
 

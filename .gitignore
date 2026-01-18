@@ -49,3 +49,6 @@ Thumbs.db
 
 # Test outputs
 test_outputs/
+
+.env
+.env.example

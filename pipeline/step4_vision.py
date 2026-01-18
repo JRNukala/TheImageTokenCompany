@@ -9,13 +9,14 @@ import numpy as np
 from pipeline.step3_cvspec import CVSpec
 
 
-def run_vision_pipeline(image: np.ndarray, cvspec: CVSpec) -> str:
+def run_vision_pipeline(image: np.ndarray, cvspec: CVSpec, user_prompt: str = "") -> str:
     """
     Run vision analysis based on CVspec.
 
     Args:
         image: Image as numpy array (BGR format from cv2)
         cvspec: CVSpec indicating which modules to run
+        user_prompt: Original user prompt (fallback for SmolVLM if focus hint is empty)
 
     Returns:
         Compact imgDescr string containing only relevant information
@@ -141,10 +142,20 @@ def run_vision_pipeline(image: np.ndarray, cvspec: CVSpec) -> str:
 
     # Scene Understanding (Local SmolVLM-256M)
     if cvspec.understanding:
-        print(f"  [Debug] Running Understanding module (SmolVLM-256M local)...")
+        focus_hint = cvspec.understanding_focus if hasattr(cvspec, 'understanding_focus') else ""
+
+        # If no focus hint from Gemini, use user prompt as fallback
+        if not focus_hint and user_prompt:
+            focus_hint = user_prompt
+            print(f"  [Debug] Running Understanding module (SmolVLM-256M local) with user prompt as focus: '{focus_hint[:50]}...'")
+        elif focus_hint:
+            print(f"  [Debug] Running Understanding module (SmolVLM-256M local) with Gemini focus: '{focus_hint}'...")
+        else:
+            print(f"  [Debug] Running Understanding module (SmolVLM-256M local) with default prompt...")
+
         try:
             from vision_modules.scene_understanding import analyze_scene
-            result = analyze_scene(image)
+            result = analyze_scene(image, focus_hint=focus_hint)
             print(f"  [Understanding] Raw result: '{result}'")
             if result:
                 print(f"  [Understanding] → {result}")

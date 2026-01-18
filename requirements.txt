@@ -1,6 +1,6 @@
 # Core
-opencv-python>=4.8.0
-numpy>=1.24.0
+opencv-python>=4.8.0,<4.12.0  # Pin to version compatible with numpy<2
+numpy>=1.24.0,<2.0.0  # Pin to <2 for TensorFlow compatibility
 pillow>=10.0.0
 
 # OCR

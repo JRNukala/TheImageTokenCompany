@@ -31,12 +31,13 @@ def _load_model():
     return _model, _processor
 
 
-def analyze_scene(image: np.ndarray) -> str:
+def analyze_scene(image: np.ndarray, focus_hint: str = "") -> str:
     """
     Get semantic scene understanding using local SmolVLM.
 
     Args:
         image: Image as numpy array (BGR from cv2)
+        focus_hint: Optional hint about what aspects to focus on
 
     Returns:
         Compact scene description (actions, emotions, context)
@@ -47,13 +48,18 @@ def analyze_scene(image: np.ndarray) -> str:
         # Convert BGR numpy to RGB PIL
         pil_image = Image.fromarray(image[:, :, ::-1])
 
-        # Create prompt for concise output
+        # Create prompt with optional focus hint
+        if focus_hint:
+            prompt_text = f"Describe this scene, focusing specifically on: {focus_hint}. Be expressive but concise (30-40 words):"
+        else:
+            prompt_text = "Describe the key visual elements, actions, emotions, and atmosphere in this scene. Focus on important details that help understand what's happening. Be expressive but concise (30-40 words):"
+
         messages = [
             {
                 "role": "user",
                 "content": [
                     {"type": "image"},
-                    {"type": "text", "text": "Describe actions and emotions in 15 words:"}
+                    {"type": "text", "text": prompt_text}
                 ]
             }
         ]
@@ -63,8 +69,8 @@ def analyze_scene(image: np.ndarray) -> str:
         inputs = processor(text=prompt, images=[pil_image], return_tensors="pt")
         inputs = inputs.to(model.device)
 
-        # Generate
-        outputs = model.generate(**inputs, max_new_tokens=50)
+        # Generate (increased token limit for more expressive output)
+        outputs = model.generate(**inputs, max_new_tokens=100)
         result = processor.decode(outputs[0], skip_special_tokens=True)
 
         # Extract just the response (after the prompt)

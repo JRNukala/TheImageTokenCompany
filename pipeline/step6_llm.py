@@ -34,12 +34,23 @@ Answer:"""
 SYSTEM_INSTRUCTION = "Answer the question about the image based on the description provided. Be concise."
 
 
-def get_answer_gemini(compressed_img_descr: str, compressed_txt: str) -> str:
+def get_answer_gemini(compressed_img_descr: str, compressed_txt: str, original_prompt: str = None) -> str:
     """Get answer using Gemini with shared client and retry logic."""
-    prompt = PROMPT_TEMPLATE.format(
-        img_descr=compressed_img_descr,
-        question=compressed_txt
-    )
+    # If image description is empty or vision failed, use only the original prompt
+    if not compressed_img_descr or compressed_img_descr.strip() == "":
+        if original_prompt:
+            print("[LLM] No image info available, using original prompt only")
+            prompt = f"Question: {original_prompt}\nAnswer:"
+        else:
+            prompt = PROMPT_TEMPLATE.format(
+                img_descr="[No image information available]",
+                question=compressed_txt
+            )
+    else:
+        prompt = PROMPT_TEMPLATE.format(
+            img_descr=compressed_img_descr,
+            question=compressed_txt
+        )
 
     try:
         # Use shared client with retry logic
@@ -49,15 +60,30 @@ def get_answer_gemini(compressed_img_descr: str, compressed_txt: str) -> str:
         return generate_with_retry(full_prompt)
 
     except Exception as e:
+        print(f"[LLM] Gemini failed: {e}")
+        # Fallback: if we have original prompt, return a message
+        if original_prompt:
+            return f"Unable to process image. Original question was: {original_prompt}"
         return f"Error getting answer: {e}"
 
 
-def get_answer_openai(compressed_img_descr: str, compressed_txt: str, model: str = "gpt-4o-mini") -> str:
+def get_answer_openai(compressed_img_descr: str, compressed_txt: str, original_prompt: str = None, model: str = "gpt-4o-mini") -> str:
     """Get answer using OpenAI."""
-    prompt = PROMPT_TEMPLATE.format(
-        img_descr=compressed_img_descr,
-        question=compressed_txt
-    )
+    # If image description is empty or vision failed, use only the original prompt
+    if not compressed_img_descr or compressed_img_descr.strip() == "":
+        if original_prompt:
+            print("[LLM] No image info available, using original prompt only")
+            prompt = f"Question: {original_prompt}\nAnswer:"
+        else:
+            prompt = PROMPT_TEMPLATE.format(
+                img_descr="[No image information available]",
+                question=compressed_txt
+            )
+    else:
+        prompt = PROMPT_TEMPLATE.format(
+            img_descr=compressed_img_descr,
+            question=compressed_txt
+        )
 
     try:
         client = _get_openai_client()
@@ -73,6 +99,10 @@ def get_answer_openai(compressed_img_descr: str, compressed_txt: str, model: str
         return response.choices[0].message.content.strip()
 
     except Exception as e:
+        print(f"[LLM] OpenAI failed: {e}")
+        # Fallback: if we have original prompt, return a message
+        if original_prompt:
+            return f"Unable to process image. Original question was: {original_prompt}"
         return f"Error getting answer: {e}"
 
 
@@ -80,7 +110,8 @@ def get_answer(
     compressed_img_descr: str,
     compressed_txt: str,
     provider: str = "gemini",
-    model: str = None
+    model: str = None,
+    original_prompt: str = None
 ) -> str:
     """
     Get final answer from LLM.
@@ -90,14 +121,15 @@ def get_answer(
         compressed_txt: Compressed user question
         provider: LLM provider ("gemini" or "openai")
         model: Model name (optional, uses defaults)
+        original_prompt: Original user prompt (fallback if vision fails)
 
     Returns:
         LLM's answer string
     """
     if provider == "gemini":
-        return get_answer_gemini(compressed_img_descr, compressed_txt)
+        return get_answer_gemini(compressed_img_descr, compressed_txt, original_prompt)
     elif provider == "openai":
-        return get_answer_openai(compressed_img_descr, compressed_txt, model or "gpt-4o-mini")
+        return get_answer_openai(compressed_img_descr, compressed_txt, original_prompt, model or "gpt-4o-mini")
     else:
         raise ValueError(f"Unknown provider: {provider}")
 

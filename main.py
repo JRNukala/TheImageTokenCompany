@@ -81,9 +81,9 @@ def run_pipeline(
 
     # STEP 3: Generate CVspec (use ORIGINAL prompt for better routing accuracy)
     if verbose:
-        console.print(f"\n[bold blue]STEP 3:[/] Generating CVspec (using {provider})...")
+        console.print(f"\n[bold blue]STEP 3:[/] Generating CVspec (using Gemini)...")
 
-    cvspec = generate_cvspec(inputs.prompt, provider=provider)
+    cvspec = generate_cvspec(inputs.prompt, provider="gemini")
 
     # Fallback: If no modules selected, use understanding (SmolVLM) as default
     modules = get_active_modules(cvspec)
@@ -102,7 +102,7 @@ def run_pipeline(
     if verbose:
         console.print("\n[bold blue]STEP 4:[/] Running vision pipeline...")
 
-    img_descr = run_vision_pipeline(inputs.image, cvspec)
+    img_descr = run_vision_pipeline(inputs.image, cvspec, user_prompt=inputs.prompt)
 
     if verbose:
         console.print(f"  Raw output: \"{img_descr}\"")
@@ -122,15 +122,14 @@ def run_pipeline(
         console.print(f"  Total tokens: {stats.total_compressed}")
         console.print(f"  Savings: {stats.savings_percent:.1f}%")
 
-    # STEP 6: Get final answer (COMMENTED OUT FOR DEBUGGING)
+    # STEP 6: Get final answer
     if verbose:
-        console.print(f"\n[bold blue]STEP 6:[/] [yellow]SKIPPED - Final LLM call disabled for debugging[/]")
+        console.print(f"\n[bold blue]STEP 6:[/] Getting final answer from LLM...")
         final_prompt = build_final_prompt(compressed_img, compressed_txt)
-        console.print(f"  Final prompt that WOULD be sent:\n    {final_prompt.replace(chr(10), chr(10) + '    ')}")
+        console.print(f"  Final prompt:\n    {final_prompt.replace(chr(10), chr(10) + '    ')}")
         console.print(f"  Final prompt tokens: {count_tokens(final_prompt, provider)}")
 
-    # answer = get_answer(compressed_img, compressed_txt, provider=provider, model=model)
-    answer = "[SKIPPED - LLM call disabled for debugging]"
+    answer = get_answer(compressed_img, compressed_txt, provider=provider, model=model, original_prompt=inputs.prompt)
 
     if verbose:
         console.print(f"\n[bold yellow]Debug Summary:[/]")
