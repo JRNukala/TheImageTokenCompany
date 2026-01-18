@@ -36,6 +36,13 @@
 * [x] Created web interface with Flask (app.py)
 * [x] Built frontend UI with image upload, prompt input, and results display
 * [x] Added visual token comparison and pipeline details viewer
+* [x] Redesigned UI with modern dark theme inspired by The Token Company
+* [x] Created custom token-layered logo with CSS animations
+* [x] Applied black color scheme with green accent (#00ff88)
+* [x] Created Render deployment configuration (render.yaml)
+* [x] Added gunicorn for production WSGI server
+* [x] Updated app.py for production environment
+* [x] Created DEPLOYMENT.md with step-by-step guide
 
 ## 🧠 Notes / Decisions
 

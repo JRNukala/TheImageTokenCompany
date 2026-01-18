@@ -3,15 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Token Company - Multimodal Semantic Compression</title>
+    <title>The Image Token Company - Multimodal Semantic Compression</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>🖼️ The Image Token Company</h1>
-            <p class="subtitle">Multimodal Semantic Compression Pipeline</p>
-            <p class="description">Upload an image and ask a question. We'll compress the visual information and get you an answer using 85-95% fewer tokens!</p>
+            <div class="logo-container">
+                <div class="logo">
+                    <div class="token-icon">
+                        <div class="token-layers">
+                            <div class="token-layer"></div>
+                            <div class="token-layer"></div>
+                            <div class="token-layer"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="brand">
+                    <h1>The Image Token Company</h1>
+                    <p class="tagline">Multimodal Semantic Compression</p>
+                </div>
+            </div>
+            <p class="description">Reduce LLM costs and latency through intelligent visual compression. Upload an image, ask a question, and save 85-95% on tokens.</p>
         </header>
 
         <div class="main-content">
